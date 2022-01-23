@@ -1,5 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
-
 #include "ssocket.h"
 #include <iostream>
 using namespace std;
@@ -12,6 +10,21 @@ int bs = RCV_DEFAULT;
 
 typedef void(*libcall)(ssocket::acceptor&,dlldata);
 map<string, libcall> clibs;
+
+string sRemovingEOL(string s) {
+	string t = s;
+	while (t[t.length() - 1] == '\n') t.pop_back();
+	return move(t);
+}
+
+string sCurrDir(string s = "") {
+	char buf3[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, buf3);
+	if (s.length()) {
+		if (s[0] == '/' || s[0] == '\\') s.erase(s.begin());
+	}
+	return string(buf3) + "\\" + s;
+}
 
 string libs = "$library.txt";
 string forbidden = "$forbids.htm";
@@ -69,7 +82,7 @@ int main(int argc, char* argv[]) {
 			USES_BEGIN(buf3)
 
 			fgets(buf3, sizeof(buf3), f);
-			auto sp = splitLines(buf3, '|');
+			auto sp = splitLines(sRemovingEOL(buf3).c_str(), '|');
 			// Format: [path]|[dll]
 			if (sp.size() != 2) {
 				printf("Error: Bad config in configruation: %s\n", buf3);
@@ -91,7 +104,6 @@ int main(int argc, char* argv[]) {
 		}
 		fclose(f);
 	}
-
 	if (eflag) system("pause");
 
 	system("cls");
@@ -99,15 +111,19 @@ int main(int argc, char* argv[]) {
 	s.accepts([&](ssocket::acceptor &s) {
 		http_recv p;
 		http_send se;
-		// = clear
-		p.release();
-		se.release();
 
 		s.receive(p);
+
+		se.codeid = 200;
+		se.code_info = "OK";
+		se.proto_ver = p.proto_ver;
+;
 		auto ph = resolveMinorPath(p.path);
 
 		if (ph.first.find("$") != string::npos) {
 			FILE *f = fopen(forbidden.c_str(), "rb");
+			se.codeid = 403;
+			se.code_info = "Forbidden";
 			se.loadContent(f);
 			fclose(f);
 			goto sendup;
@@ -117,6 +133,8 @@ int main(int argc, char* argv[]) {
 		if (!clibs.count(ph.first)) {
 			FILE *f = fopen(notfound.c_str(), "rb");
 			se.loadContent(f);
+			se.codeid = 404;
+			se.code_info = "Not Found";
 			fclose(f);
 			goto sendup;
 		}
@@ -124,6 +142,7 @@ int main(int argc, char* argv[]) {
 			dlldata d;
 			d.forbidden = forbidden;
 			d.notfound = notfound;
+			d.currdir = sCurrDir();
 			clibs[ph.first](s, d);
 			goto after_sent;
 		}

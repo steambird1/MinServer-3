@@ -54,7 +54,10 @@ void bytes::release()
 
 void bytes::clear()
 {
-	release();
+	// Release may cause system releases unexpected pointer.
+	this->byte_space = nullptr;
+	this->len = 0;
+	//release();
 }
 
 void bytes::fill(char c)

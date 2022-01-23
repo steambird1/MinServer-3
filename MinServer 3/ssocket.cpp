@@ -1,5 +1,7 @@
 #include "ssocket.h"
 
+vector<string> defiles = { "", "index.html","index.htm" };
+map<string, string> ctypes = { {".apk", "application/vnd.android"},  {".html","text/html"}, {".htm", "text/html"}, {".ico","image/ico"}, {".jpg", "image/jpg"}, {".jpeg", "image/jpeg"}, {".png", "image/apng"}, {".txt","text/plain"}, {".css", "text/css"}, {".js", "application/x-javascript"}, {".mp3", "audio/mpeg"}, {".wav", "audio/wav"}, {".mp4", "video/mpeg"} };
 
 void http_recv::release()
 {
@@ -502,4 +504,28 @@ pair<string, string> resolveMinorPath(string full) {
 		}
 	}
 	return make_pair(f2, f3);
+}
+
+disp_info post_info::toDispInfo()
+{
+	// Content-Disposition
+	 // processing
+	if (!this->attr.count("Content-Disposition")) {
+		return disp_info();
+	}
+	vector<string> s = splitLines(this->attr["Content-Disposition"].c_str(), ';', false, ' ');
+	if (s.size() < 2) {
+		if (s.size() < 1) {
+			return disp_info();
+		}
+		return { s[0], {} };
+	}
+	map<string, string> atz;
+	for (auto i = s.begin() + 1; i != s.end(); i++) {
+		vector<string> sa = splitLines(i->c_str(), '=');
+		if (sa.size() != 2)
+			continue;
+		atz[sa[0]] = sa[1];
+	}
+	return { s[0], atz };
 }
