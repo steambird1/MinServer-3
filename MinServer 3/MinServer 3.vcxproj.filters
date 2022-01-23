@@ -13,5 +13,30 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\bytes">
+      <UniqueIdentifier>{de22835d-c227-4e24-8588-ec3afb1cd3dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ssocket3">
+      <UniqueIdentifier>{99f8a6dc-890e-4a33-8c10-edaa6d0f2dfd}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bytes.h">
+      <Filter>头文件\bytes</Filter>
+    </ClInclude>
+    <ClInclude Include="ssocket.h">
+      <Filter>头文件\ssocket3</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bytes.cpp">
+      <Filter>头文件\bytes</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ssocket.cpp">
+      <Filter>头文件\ssocket3</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

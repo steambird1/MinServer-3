@@ -123,6 +123,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="bytes.h" />
+    <ClInclude Include="ssocket.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bytes.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ssocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
