@@ -279,3 +279,167 @@ void ssocket::accepts(function<void(ssocket::acceptor &s)> acceptor, function<vo
 
 	}
 }
+
+void ssocket::sock_init()
+{
+	this->errored = false;
+}
+
+bytes ssocket::acceptor::raw_receive()
+{
+	int ret = recv(this->ace, this->recv_buf, sizeof(char)*this->rcbsz, 0);
+	this->last_receive = ret;
+	if (ret > 0) {
+		bytes b;
+		b.add(this->recv_buf, ret);
+		return move(b);
+	}
+	else
+		return bytes();
+}
+
+ssocket::acceptor::acceptor(SOCKET ac)
+{
+	this->ace = ac;
+	this->acc_errored = false;
+}
+
+void ssocket::acceptor::receive(http_recv & h)
+{
+	this->prev_recv.clear();	// May be unsafe ?
+	bytes b = raw_receive();
+	this->prev_recv += b;
+	//b = bytes();				// Re-initalize
+
+	// Getting 1st line (surely can use string
+	// that will not contains '\0')
+	string s = b.toString();
+	vector<string> lf = splitLines(s.c_str());
+	if (lf.size() < 1)
+		return;
+	// 1st line for informations
+	vector<string> firstinf = splitLines(lf[0].c_str(), ' ');
+	// [HTTP/?.?] [GET...] [/]
+	if (firstinf.size() < 3)
+		return;
+	h.proto_ver = firstinf[2];
+	h.process = firstinf[0];
+	h.path = resolveHTTPSymbols(firstinf[1]);
+	vector<string>::iterator i;
+	size_t pos = lf[0].length();
+	while (b[pos] == '\r' || b[pos] == '\n') pos++;
+	printf_d("\n");
+	for (i = lf.begin() + 1; i != lf.end(); i++) {
+		if (i->empty()) {
+			printf_d("Content receive started from line previous: %s\n", (i - 1)->c_str());
+			break;
+		}
+		vector<string> af = splitLines(i->c_str(), ':', true);
+		if (af.size() < 2)
+			return;
+		h.attr[af[0]] = af[1];
+		pos += i->length();
+		while (b[pos] == '\r' || b[pos] == '\n') pos++;
+		/*printf("Previous 10 characters are: ");
+		// debuggers
+		for (size_t i = pos - 10; i <= pos; i++) printf("%c", b[i]);
+		printf("\nNext 10 characters' ASCII are: ");
+		for (size_t i = pos; i <= pos + 10; i++) printf("%c", b[i]);
+		printf("\n");
+		// end
+		*/
+	}
+	if (!h.attr.count("Content-Length"))
+	{
+		b.release();
+		return;
+	}
+	int l = atoi(h.attr["Content-Length"].c_str());
+	//for (; i != lf.end(); i++) {
+		// Oh! We can't do that.
+		//h.content += ((*i) + '\n');
+		//l -= (i->length() + 1);
+	//}
+	printf_d("Additional receiving:(ASCII=%d, pos=%zd, l=%d)", b[pos], pos, l);				// debuggin
+	printf_d("Contented informations:\n");
+	int lres = 0;
+	for (size_t i = pos; i < min(l + pos, b.length()); i++) {
+		h.content += b[i];
+		lres++;
+		//printf("{%d->%d}%d ",i,l+pos,b[i]);								// debugging
+		printf_d("%c", b[i]);
+	}
+
+	printf_d("Another raw receive for contents remaining:\n");
+	// BUT, FOR CONTENT
+	// WE HAVE TO GET MORE
+	printf_d("Less: %d\n", lres);
+	// To save memory
+	int r = 0;
+	for (int i = 0; i < l - lres; i += r) {
+		r = recv(this->ace, this->recv_buf, sizeof(char)*this->rcbsz, 0);
+		if (r > 0) {
+			h.content.add(this->recv_buf, r);
+			this->prev_recv.add(this->recv_buf, r);
+		}
+	}
+	// As for non-external document promises full
+	/*
+	FILE *f = fopen("promise.gif", "wb");
+	fwrite(h.content.toCharArray(), sizeof(char), h.content.length(), f);
+	fclose(f);*/
+	b.release();
+}
+
+bool ssocket::acceptor::sends(bytes & sender)
+{
+	const char* dc = sender.toCharArray();
+	bool t = (send(this->ace, dc, sender.length(), 0) != SOCKET_ERROR);
+	delete[] dc; //?
+	//data.release();	// It's a copy now
+	return t;
+}
+
+bool ssocket::acceptor::sends(http_send & sender)
+{
+	bytes b = sender.proto_ver + " " + to_string(sender.codeid) + " " + sender.code_info + "\n";
+	sender.attr["Content-Length"] = to_string(sender.content.length());
+	//	 for (auto i = attr.begin(); i != attr.end(); i++)
+	//		 b += (i->first + ": " + i->second) + "\n";
+	for (auto &i : sender.attr) {
+		b += (i.first + ": " + i.second + "\n");
+	}
+	b += '\n';
+	b += sender.content;
+	const char *d = b.toCharArray();
+	bool t = (send(this->ace, d, b.length(), 0) != SOCKET_ERROR);
+	delete[] d;
+	b.release();
+	return t;
+}
+
+void ssocket::acceptor::end_accept()
+{
+	closesocket(this->ace);
+	this->acc_errored = true;
+}
+
+bool ssocket::acceptor::accept_vaild()
+{
+	return !this->acc_errored;
+}
+
+bytes & ssocket::acceptor::get_prev()
+{
+	return this->prev_recv;
+}
+
+void ssocket::acceptor::release_prev()
+{
+	this->prev_recv.release();
+}
+
+const char * ssocket::acceptor::get_paddr()
+{
+	return inet_ntoa(this->acc.sin_addr);
+}
