@@ -282,16 +282,25 @@ bool ssocket::listens(int backlog)
 	return !(be == SOCKET_ERROR);
 }
 
-void ssocket::accepts(function<void(ssocket::acceptor &s)> acceptor, function<void(void)> runner) {
+void ssocket::accepts(function<void(ssocket::acceptor &s)> acceptor, function<void(void)> runner, int bufsz) {
 	while (true) {
 		runner();
 		int acsz = sizeof(this->acc);
 		SOCKET a = accept(this->s, (SOCKADDR*)&this->acc, &acsz);
-		thread th = thread([a, &acceptor]() {
-			ssocket::acceptor ac = ssocket::acceptor(a);
-			acceptor(ac);
+		thread th = thread([a, bufsz, &acceptor]() {
+			ssocket::acceptor ac = ssocket::acceptor(a, bufsz);
+			try {
+				acceptor(ac);
+			}
+			catch (exception ex) {
+				printf("Error occured: %s!\n", ex.what());
+			}
+			catch (...) {
+				printf("Critical error occured!\n");
+			}
 			ac.release_prev();
 			ac.end_accept();
+			__t_safe::auto_release_thread();
 		});
 		th.detach();
 	}
@@ -316,10 +325,10 @@ bytes ssocket::acceptor::raw_receive()
 		return bytes();
 }
 
-ssocket::acceptor::acceptor(SOCKET ac)
+ssocket::acceptor::acceptor(SOCKET ac, int bufsz)
 {
-	this->recv_buf = new char[RCV_DEFAULT];
-	this->rcbsz = RCV_DEFAULT;
+	this->recv_buf = new char[bufsz];
+	this->rcbsz = bufsz;
 	this->ace = ac;
 	this->acc_errored = false;
 }
@@ -482,4 +491,15 @@ void http_send::release()
 	this->code_info = "";
 	this->attr.clear();
 	this->content.release();
+}
+
+pair<string, string> resolveMinorPath(string full) {
+	string f2 = full, f3 = full;
+	for (size_t i = 0; i < full.length(); i++) {
+		if (full[i] == '?') {
+			f2 = f2.substr(0, i); // abc? (0,3) -> abc
+			f3 = f3.substr(i + 1);
+		}
+	}
+	return make_pair(f2, f3);
 }

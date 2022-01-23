@@ -51,6 +51,12 @@ bytes resolveHTTPSymbols(string s);
 WSADATA initalize_socket();
 vector<string> splitLines(const char *data, char spl = '\n', bool firstonly = false, char filter = '\r');
 
+pair<string, string> resolveMinorPath(string full);
+
+vector<string> defiles = { "", "index.html","index.htm" };
+map<string, string> ctypes = { {".apk", "application/vnd.android"},  {".html","text/html"}, {".htm", "text/html"}, {".ico","image/ico"}, {".jpg", "image/jpg"}, {".jpeg", "image/jpeg"}, {".png", "image/apng"}, {".txt","text/plain"}, {".css", "text/css"}, {".js", "application/x-javascript"}, {".mp3", "audio/mpeg"}, {".wav", "audio/wav"}, {".mp4", "video/mpeg"} };
+
+
 #pragma region(SSocket Extended Types)
 struct path_info {
 	vector<string> path;
@@ -125,7 +131,7 @@ public:
 	
 	class acceptor {
 	public:
-		acceptor(SOCKET ac);
+		acceptor(SOCKET ac, int bufsz = RCV_DEFAULT);
 		void receive(http_recv &h);
 		bool sends(bytes &sender);
 		bool sends(http_send& sender);
@@ -148,7 +154,7 @@ public:
 	ssocket(SOCKET s);
 	bool binds(int port);
 	bool listens(int backlog = 5);
-	void accepts(function<void(acceptor &s)> acceptor, function<void(void)> runner = []() {});
+	void accepts(function<void(acceptor &s)> acceptor, function<void(void)> runner = []() {}, int bufsz = RCV_DEFAULT);
 private:
 	void sock_init();
 	SOCKET s;

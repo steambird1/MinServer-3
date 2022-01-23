@@ -39,4 +39,12 @@
       <Filter>头文件\ssocket3</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="%24not_found.htm">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="$forbids.htm">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
 </Project>

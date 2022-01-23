@@ -129,3 +129,8 @@ bytes operator + (const bytes& a, const char* b);
 bool operator == (const bytes& a, const bytes& b);
 bool operator == (const bytes& a, char b);
 bool operator == (const bytes& a, string b);
+
+// Used for sharing to DLL
+struct dlldata {
+	string forbidden, notfound;
+};
