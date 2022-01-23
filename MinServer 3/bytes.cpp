@@ -54,9 +54,7 @@ void bytes::release()
 
 void bytes::clear()
 {
-	this->byte_space = nullptr;
-	this->len = 0;
-	//release();
+	release();
 }
 
 void bytes::fill(char c)

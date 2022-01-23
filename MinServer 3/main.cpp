@@ -7,6 +7,7 @@ using namespace std;
 int port = 80;
 
 int main(int argc, char* argv[]) {
+	initalize_socket();
 	ssocket s;
 	for (int i = 1; i < argc; i++) {
 		string p = argv[i];
@@ -26,8 +27,18 @@ int main(int argc, char* argv[]) {
 	}
 
 	s.accepts([&](ssocket::acceptor &s) {
-		bytes b = "Hello!";
-		s.sends(b);
+		http_recv rc;
+		rc.release();
+		s.receive(rc);
+		http_send sd;
+		sd.attr["Content-Type"] = "text/plain";
+		sd.code_info = "OK";
+		sd.codeid = 200;
+		sd.content = "Hello for your " + rc.proto_ver + " " + rc.process + " at " + rc.path;
+		sd.proto_ver = rc.proto_ver;
+		s.sends(sd);
+		
+		rc.release();
 	});
 
 	while (true) {

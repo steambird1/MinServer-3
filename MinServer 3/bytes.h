@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <set>
+#include <map>
 using namespace std;
 
 template <typename TKey, typename TValue>
@@ -21,14 +22,11 @@ private:
 	static thread_local set<__t_safe*> tstable;
 	mutex m;
 };
-//thread_local vector<__t_safe*> __t_safe::tstable;
 
 // Prepare for threading.
 template <typename Ty>
 class t_safe : public __t_safe {
 public:
-	template <typename TKey, typename TValue>
-	friend map<TKey, TValue>& t_safe_table<TKey, TValue>::unsafe_get();
 	t_safe() {
 
 	}
@@ -66,9 +64,10 @@ public:
 	operator __t_safe&() {
 		return this->v;
 	}
-	mapdata& unsafe_get() {
+	// Don't think of this ... Windows does not support
+	/*mapdata& unsafe_get() {
 		return v.data;
-	}
+	}*/
 	bool try_lock() {
 		return v.try_lock();
 	}

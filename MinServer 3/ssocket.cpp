@@ -252,6 +252,17 @@ vector<string> splitLines(const char *data, char spl, bool firstonly, char filte
 }
 
 
+ssocket::ssocket()
+{
+	sock_init();
+}
+
+ssocket::ssocket(SOCKET s)
+{
+	sock_init();
+	this->s = s;
+}
+
 bool ssocket::binds(int port)
 {
 	sockaddr_in sa;
@@ -276,13 +287,20 @@ void ssocket::accepts(function<void(ssocket::acceptor &s)> acceptor, function<vo
 		runner();
 		int acsz = sizeof(this->acc);
 		SOCKET a = accept(this->s, (SOCKADDR*)&this->acc, &acsz);
-
+		thread th = thread([a, &acceptor]() {
+			ssocket::acceptor ac = ssocket::acceptor(a);
+			acceptor(ac);
+			ac.release_prev();
+			ac.end_accept();
+		});
+		th.detach();
 	}
 }
 
 void ssocket::sock_init()
 {
-	this->errored = false;
+	this->s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	this->errored = (s == INVALID_SOCKET);
 }
 
 bytes ssocket::acceptor::raw_receive()
@@ -300,6 +318,8 @@ bytes ssocket::acceptor::raw_receive()
 
 ssocket::acceptor::acceptor(SOCKET ac)
 {
+	this->recv_buf = new char[RCV_DEFAULT];
+	this->rcbsz = RCV_DEFAULT;
 	this->ace = ac;
 	this->acc_errored = false;
 }
@@ -442,4 +462,24 @@ void ssocket::acceptor::release_prev()
 const char * ssocket::acceptor::get_paddr()
 {
 	return inet_ntoa(this->acc.sin_addr);
+}
+
+void http_send::loadContent(FILE * hnd)
+{
+	long len = getFileLength(hnd);
+	char *c = new char[len + 1];
+	fread(c, sizeof(char), len, hnd);
+	this->content.clear();
+	this->content.add(c, len);
+	delete[] c;
+}
+
+void http_send::release()
+{
+	this->raw_send.release();
+	this->raw_sending = false;
+	this->proto_ver = "";
+	this->code_info = "";
+	this->attr.clear();
+	this->content.release();
 }

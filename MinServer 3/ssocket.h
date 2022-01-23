@@ -1,4 +1,5 @@
 #pragma once
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <map>
 #include <Windows.h>
@@ -99,6 +100,7 @@ struct http_send {
 	bytes content;
 
 	void loadContent(FILE *hnd);
+	void release();
 	// Load content from a file.
 	// Deprecated
 	MEM_DEPRECATE("ssocket::sends(sender&)")
