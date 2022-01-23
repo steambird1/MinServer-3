@@ -3,6 +3,8 @@
 #include <map>
 #include <Windows.h>
 #include "bytes.h"
+#include <functional>
+using namespace std;
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -36,6 +38,17 @@
 #ifndef SEABIRD_NET_NO_THREAD_DEPRECATE
 #define THREAD_DEPRECATE(cons) DEPRECATED("This version doesn't support multithreading. consider using "#cons)
 #endif
+
+map<string, string> contentTypes();
+string searchTypes(string extension, string def = "text/plain");
+long getFileLength(FILE *f);
+// Hex numbers -> Dec numbers
+int hex2dec(string hex);
+// Resolve HTTP marks (e.g. %20 -> ' ').
+bytes resolveHTTPSymbols(string s);
+// You have to run this before everything!!
+WSADATA initalize_socket();
+vector<string> splitLines(const char *data, char spl = '\n', bool firstonly = false, char filter = '\r');
 
 #pragma region(SSocket Extended Types)
 struct path_info {
@@ -131,12 +144,12 @@ public:
 
 	ssocket();
 	ssocket(SOCKET s);
-	ssocket(int port);
 	bool binds(int port);
 	bool listens(int backlog = 5);
-	bool accepts(function<void(acceptor &s)> acceptor, function<void(void)> runner = []() {});
+	void accepts(function<void(acceptor &s)> acceptor, function<void(void)> runner = []() {});
 private:
 	void sock_init();
 	SOCKET s;
+	sockaddr_in acc;
 	bool errored;
 };
