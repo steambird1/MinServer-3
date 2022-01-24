@@ -8,10 +8,10 @@ using namespace std;
 // Let's go on, write the easiest first
 
 extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d) {
-	http_recv r;
+	http_recv &r = d.rcv;
 	http_send sd;
-	r.release();
-	s.receive(r);
+	//r.release();
+	//s.receive(r);
 	pair<string,string> p = resolveMinorPath(r.path);
 	string fpath = p.first;
 

@@ -158,4 +158,10 @@ using namespace std;
 		sockaddr_in acc;
 		bool errored;
 	};
+
+	// Used for sharing to DLL
+	struct dlldata {
+		http_recv rcv;
+		string forbidden, notfound, currdir;
+	};
 //}

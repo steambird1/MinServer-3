@@ -131,9 +131,5 @@ using namespace std;
 	bool operator == (const bytes& a, char b);
 	bool operator == (const bytes& a, string b);
 
-	// Used for sharing to DLL
-	struct dlldata {
-		string forbidden, notfound, currdir;
-	};
 //}
 

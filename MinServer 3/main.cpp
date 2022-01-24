@@ -143,7 +143,9 @@ int main(int argc, char* argv[]) {
 			d.forbidden = forbidden;
 			d.notfound = notfound;
 			d.currdir = sCurrDir();
+			d.rcv = http_recv(p);
 			clibs[ph.first](s, d);
+			d.rcv.release();
 			goto after_sent;
 		}
 
