@@ -261,3 +261,4 @@ __pycache__/
 *.pyc
 /MinServer 3/$library.txt
 /MinServer 3/test.txt
+/MinServer 3/mspara3.js

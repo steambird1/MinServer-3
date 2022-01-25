@@ -27,6 +27,9 @@
     <ClInclude Include="ssocket.h">
       <Filter>头文件\ssocket3</Filter>
     </ClInclude>
+    <ClInclude Include="utility.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bytes.cpp">

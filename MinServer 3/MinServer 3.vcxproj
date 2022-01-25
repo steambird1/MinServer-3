@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClInclude Include="bytes.h" />
     <ClInclude Include="ssocket.h" />
+    <ClInclude Include="utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bytes.cpp" />
