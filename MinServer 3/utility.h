@@ -113,3 +113,9 @@ string encodeBytes(bytes b) {
 	}
 	return res;
 }
+
+string sRemovingEOL(string s) {
+	string t = s;
+	while (t[t.length() - 1] == '\n') t.pop_back();
+	return move(t);
+}
