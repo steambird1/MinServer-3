@@ -135,8 +135,9 @@ function mslib() {
     }
 
     // Operations
-    this.f_operate = service_head + "?operation=file_operate&";
-    this.u_operate = service_head + "?operation=auth_workspace&";
+    this.f_operate = service_head + "?method=file_operate&";
+    this.u_operate = service_head + "?method=auth_workspace&";
+    this.d_operate = service_head + "?method=upload&"
     this.default_user = new msuser(0, this.xhobject, this.f_operate, this.u_operate, this.d_operate, 0);
 
     this.auth = function (uid, passwd) {

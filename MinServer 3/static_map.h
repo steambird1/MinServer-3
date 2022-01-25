@@ -24,8 +24,14 @@ public:
 	virtual void fromStore(string data) {
 		this->origin = data;
 	}
+	string& toString() {
+		return origin;
+	}
 	operator string&() {
 		return this->origin;
+	}
+	int_string(string o = "") : origin(o) {
+
 	}
 private:
 	string origin;
@@ -35,6 +41,9 @@ private:
 template <typename TKey, typename TValue>
 class static_map {
 public:
+
+	static_assert(is_base_of<int_static_map, TKey>, "Key and value should derive from int_static_map");
+	static_assert(is_base_of<int_static_map, TValue>, "Key and value should derive from int_static_map");
 
 	class bad_key : public exception {
 	public:

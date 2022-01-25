@@ -9,7 +9,7 @@
 using namespace std;
 
 // struct-like thing
-class int_file_token_obj : public int_string {
+class int_file_token_obj : public int_static_map {
 public:
 
 	string filename;
@@ -31,6 +31,27 @@ public:
 	}
 };
 
+constexpr int decline_alloc = 16384;
+
+class full_error : public exception {
+public:
+	virtual const char* what() {
+		return "Space is too full to auto allocate";
+	}
+};
+
+template <typename AutoTy>
+int_string AutoAllocateToken(static_map<int_string, AutoTy> t) {
+	int r;
+	if (t.count() > decline_alloc) {
+		throw full_error();
+	}
+	do {
+		r = random_s();
+	} while (t.exist(to_string(r)));
+	return to_string(r);
+}
+
 extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d) {
 	// With different operations...
 	http_recv &r = d.rcv;
@@ -41,7 +62,8 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 	se.code_info = "OK";
 
 	auto p = r.toPaths();
-	string &op = p.exts["operation"];
+	string &op = p.exts["method"];
+	string &op2 = p.exts["operate"];
 
 	auto user_table = static_map<int_string, int_string>("$users.txt");
 	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt");
@@ -51,7 +73,22 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 
 	}
 	else if (op == "auth_workspace") {
-
+		if (op2 == "check") {
+			string &req = p.exts["request"];
+			string &pwd = p.exts["passwd"];
+			if (user_table.exist(req) && user_table.get(req).toString() == pwd) {
+				int_string t = AutoAllocateToken(utoken_table);
+				utoken_table.append(t, req);
+				se.content = t.toString();
+			}
+			else {
+				se.codeid = 400;
+				se.code_info = "Bad request";
+			}
+		}
+		else if (op2 == "register") {
+			
+		}
 	}
 	else if (op == "upload") {
 
