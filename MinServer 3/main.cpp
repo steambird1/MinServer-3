@@ -140,9 +140,9 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			dlldata d;
-			d.forbidden = forbidden;
-			d.notfound = notfound;
-			d.currdir = sCurrDir();
+			d.forbidden = move(forbidden);
+			d.notfound = move(notfound);
+			d.currdir = move(sCurrDir());
 			d.rcv = http_recv(p);
 			clibs[ph.first](s, d);
 			d.rcv.release();

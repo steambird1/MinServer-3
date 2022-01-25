@@ -37,13 +37,15 @@ private:
 	string origin;
 };
 
+#define default_bufsz 4096
+
 // This kind of object CAN'T BE SHARED DURING MULTITHREAD.
 template <typename TKey, typename TValue>
 class static_map {
 public:
 
-	static_assert(is_base_of<int_static_map, TKey>, "Key and value should derive from int_static_map");
-	static_assert(is_base_of<int_static_map, TValue>, "Key and value should derive from int_static_map");
+	static_assert(is_base_of<int_static_map, TKey>::value, "Key and value should derive from int_static_map");
+	static_assert(is_base_of<int_static_map, TValue>::value, "Key and value should derive from int_static_map");
 
 	class bad_key : public exception {
 	public:
@@ -52,9 +54,7 @@ public:
 		}
 	};
 
-	constexpr int default_bufsz = 4096;
-
-	static_map(string filename, int bufsz = default_bufsz) : fn(filename) {
+	static_map(string filename, int bufsz = default_bufsz) : fn(filename), bufsz(bufsz) {
 		this->buf1 = new char[bufsz];
 		this->buf2 = new char[bufsz];
 	}
@@ -97,12 +97,13 @@ public:
 			fgets(buf2, bufsz, f);
 			t++;
 		}
+		fclose(f);
 		return t;
 	}
 
 	void append(TKey key, TValue value) {
 		FILE *f = fopen(fn.c_str(), "a");
-		fprintf("%s\n%s\n", key.toStore().c_str(), value.toStore().c_str());
+		fprintf(f,"%s\n%s\n", key.toStore().c_str(), value.toStore().c_str());
 		fclose(f);
 	}
 
@@ -119,7 +120,7 @@ public:
 			fgets(buf1, bufsz, f);
 			fgets(buf2, bufsz, f);
 			fprintf(g, "%s\n", buf1);
-			if (at == sRemovingEOL(buf1)) {
+			if (key.toStore() == sRemovingEOL(buf1)) {
 				fprintf(g, "%s\n", value.toStore().c_str());
 				flag = true;
 			}
@@ -127,6 +128,9 @@ public:
 				fprintf(g, "%s\n", buf2);
 			}
 		}
+		fclose(f);
+		fclose(g);
+		CopyFileA(s.c_str(), fn.c_str(), FALSE);
 		if (!flag)
 			append(key, value);
 	}
@@ -134,4 +138,5 @@ public:
 private:
 	char *buf1, *buf2;
 	string fn;
+	int bufsz;
 };

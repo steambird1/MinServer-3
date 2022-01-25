@@ -87,7 +87,35 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 			}
 		}
 		else if (op2 == "register") {
-			
+			string &pwd = p.exts["passwd"];
+			// 1. If you required,
+			if (p.exts.count("request")) {
+				string &req = p.exts["request"];
+				if (user_table.exist(req)) {
+					se.codeid = 400;
+					se.code_info = "Bad request";
+				}
+				else {
+					user_table.append(req, toMD5(pwd));
+				}
+			}
+			else if (p.exts.count("token")) {
+				int token = atoi(p.exts["token"].c_str());
+				if (utoken_table.exist(to_string(token))) {
+					int_string uname = utoken_table.get(to_string(token));
+					user_table.set(uname, toMD5(pwd));
+				}
+				else {
+					se.codeid = 400;
+					se.code_info = "Bad request";
+				}
+			}
+			else {
+				// 2. If you not, auto alloc.
+				int_string t = AutoAllocateToken(user_table);
+				user_table.append(t, toMD5(pwd));
+				se.content = t.toString();
+			}
 		}
 	}
 	else if (op == "upload") {
