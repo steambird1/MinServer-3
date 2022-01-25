@@ -110,5 +110,6 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 	}
 
 	s.sends(sd);
+	sd.release();
 	r.release();
 }

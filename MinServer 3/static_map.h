@@ -16,13 +16,26 @@ public:
 	virtual void fromStore(string data) = 0;
 };
 
+class int_string : public int_static_map {
+public:
+	virtual string toStore() {
+		return this->origin;
+	}
+	virtual void fromStore(string data) {
+		this->origin = data;
+	}
+	operator string&() {
+		return this->origin;
+	}
+private:
+	string origin;
+};
+
 // This kind of object CAN'T BE SHARED DURING MULTITHREAD.
 template <typename TKey, typename TValue>
 class static_map {
 public:
-	static_assert(is_base_of<int_static_map, TKey>, "Key-Type have to be extended from int_static_map!");
-	static_assert(is_base_of<int_static_map, TValue>, "Key-Type have to be extended from int_static_map!");
-	
+
 	class bad_key : public exception {
 	public:
 		virtual const char* what() const {
@@ -53,6 +66,16 @@ public:
 			}
 		}
 		fclose(f);
+	}
+
+	bool exist(TKey key) {
+		try {
+			get(key);
+		}
+		catch (bad_key ex) {
+			return false;
+		}
+		return true;
 	}
 	
 	size_t count() {

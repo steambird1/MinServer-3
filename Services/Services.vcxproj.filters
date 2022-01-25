@@ -13,10 +13,29 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="头文件\md5">
+      <UniqueIdentifier>{3fb09803-b928-46dd-b09f-ea4c135fecbf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>头文件\md5</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="md5.h">
+      <Filter>头文件\md5</Filter>
+    </ClInclude>
+    <ClInclude Include="md5_3.h">
+      <Filter>头文件\md5</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mslib.js">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>
