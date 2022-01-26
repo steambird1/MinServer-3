@@ -145,6 +145,26 @@ public:
 			append(key, value);
 	}
 
+	void erase(TKey key) {
+		string s = makeTemp();
+		FILE *f = fopen(fn.c_str(), "r"), *g = fopen(s.c_str(), "w");
+		if (f == NULL)
+			throw bad_key();
+		bool flag = false;
+		while (!feof(f)) {
+			fgets(buf1, bufsz, f);
+			fgets(buf2, bufsz, f);
+			if (key.toStore() != sRemovingEOL(buf1)) {
+				fprintf(g, "%s\n%s\n", buf1, buf2);
+			}
+			else {
+				flag = true;
+			}
+		}
+		if (!flag)
+			throw bad_key();
+	}
+
 private:
 	char *buf1, *buf2;
 	string fn;

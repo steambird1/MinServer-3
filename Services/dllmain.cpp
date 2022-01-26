@@ -15,6 +15,10 @@ public:
 	string filename;
 	int perm;
 
+	int_file_token_obj() {
+
+	}
+
 	virtual string toStore() {
 		return filename + "|" + to_string(perm);
 	}
@@ -31,24 +35,46 @@ public:
 	}
 };
 
+class int_flag : public int_static_map {
+
+public:
+	int_flag() {
+
+	}
+
+	virtual string toStore() {
+		return "1";
+	}
+	virtual void fromStore(string data) {
+		// Do nothing
+	}
+};
+
 class int_fperm_key_obj : public int_static_map {
 public:
 
 	string username;
+	string filename;
 	int perm;
 
+	int_fperm_key_obj() {
+
+	}
+
 	virtual string toStore() {
-		return username + "|" + to_string(perm);
+		return username + "|" + to_string(perm) + "|" + filename;
 	}
 	virtual void fromStore(string data) {
 		auto p = splitLines(data.c_str(), '|');
-		if (p.size() < 2) {
+		if (p.size() < 3) {
 			username = "";
+			filename = "";
 			perm = 0;
 		}
 		else {
 			username = p[0];
 			perm = atoi(p[1].c_str());
+			filename = p[2];
 		}
 	}
 };
@@ -88,7 +114,7 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	string &op2 = p.exts["operate"];
 
 	auto user_table = static_map<int_string, int_string>("$users.txt");
-	auto file_table = static_map<int_fperm_key_obj, int_string>("$files.txt");
+	auto file_table = static_map<int_fperm_key_obj, int_flag>("$files.txt");
 	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt");
 	auto ftoken_table = static_map<int_string, int_file_token_obj>("$files_tokens.txt");
 
@@ -141,10 +167,58 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 			}
 		}
 		else if (op2 == "chown") {
+			string &fname = p.exts["file"];
+			string &token = p.exts["token"];
+			string &touid = p.exts["touid"];
 
+			if (utoken_table.exist(token)) {
+				int_fperm_key_obj f;
+				f.perm = -1;	// -1 for ownership
+				f.username = utoken_table.get(token);
+				f.filename = fname;
+				if (file_table.exist(f)) {
+					file_table.erase(f);
+					f.username = touid;
+					// Here can only be ONE ownership
+					file_table.append(f, int_flag());
+				}
+				else {
+					se.codeid = 400;
+					se.code_info = "Bad request";
+				}
+			}
+			else {
+				se.codeid = 400;
+				se.code_info = "Bad request";
+			}
 		}
 		else if (op2 == "chfperm") {
+			string &fname = p.exts["file"];
+			string &token = p.exts["token"];
+			string &touid = p.exts["touid"];
+			string &toperm = p.exts["toperm"];
 
+			if (utoken_table.exist(token)) {
+				int_fperm_key_obj f;
+				f.perm = -1;
+				f.username = utoken_table.get(token);
+				f.filename = fname;
+				if (file_table.exist(f)) {
+					int_fperm_key_obj g;
+					g.perm = atoi(toperm.c_str());
+					g.username = touid;
+					g.filename = fname;
+					file_table.set(g, int_flag());
+				}
+				else {
+					se.codeid = 400;
+					se.code_info = "Bad request";
+				}
+			}
+			else {
+				se.codeid = 400;
+				se.code_info = "Bad request";
+			}
 		}
 	}
 	else if (op == "upload") {
