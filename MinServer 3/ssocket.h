@@ -162,20 +162,7 @@ using namespace std;
 	// Used for sharing to DLL
 	// Somebody says that it's important not to copy
 	struct dlldata {
-
-		dlldata() {
-
-		}
-
-		//...?
-		dlldata(const dlldata &other) {
-			this->rcv = other.rcv;
-			this->forbidden = other.forbidden;
-			this->notfound = other.notfound;
-			this->currdir = other.currdir;
-		}
-
-		http_recv &&rcv = move(http_recv());
-		string &&forbidden = move(string()), &&notfound = move(string()), &&currdir = move(string());
+		http_recv rcv;
+		string forbidden, notfound, currdir;
 	};
 //}

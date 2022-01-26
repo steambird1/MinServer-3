@@ -8,7 +8,7 @@ using namespace std;
 int port = 80;
 int bs = RCV_DEFAULT;
 
-typedef void(*libcall)(ssocket::acceptor&,dlldata);
+typedef void(*libcall)(ssocket::acceptor&,dlldata&);
 map<string, libcall> clibs;
 
 string sRemovingEOL(string s) {
@@ -140,8 +140,8 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			dlldata d;
-			d.forbidden = move(forbidden);
-			d.notfound = move(notfound);
+			d.forbidden = forbidden;
+			d.notfound = notfound;
 			d.currdir = move(sCurrDir());
 			d.rcv = http_recv(p);
 			clibs[ph.first](s, d);

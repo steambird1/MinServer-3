@@ -13,20 +13,42 @@ class int_file_token_obj : public int_static_map {
 public:
 
 	string filename;
-	string perm;
+	int perm;
 
 	virtual string toStore() {
-		return filename + "|" + perm;
+		return filename + "|" + to_string(perm);
 	}
 	virtual void fromStore(string data) {
 		auto p = splitLines(data.c_str(), '|');
 		if (p.size() < 2) {
 			filename = "";
-			perm = "";
+			perm = 0;
 		}
 		else {
 			filename = p[0];
-			perm = p[1];
+			perm = atoi(p[1].c_str());
+		}
+	}
+};
+
+class int_fperm_key_obj : public int_static_map {
+public:
+
+	string username;
+	int perm;
+
+	virtual string toStore() {
+		return username + "|" + to_string(perm);
+	}
+	virtual void fromStore(string data) {
+		auto p = splitLines(data.c_str(), '|');
+		if (p.size() < 2) {
+			username = "";
+			perm = 0;
+		}
+		else {
+			username = p[0];
+			perm = atoi(p[1].c_str());
 		}
 	}
 };
@@ -52,7 +74,7 @@ int_string AutoAllocateToken(static_map<int_string, AutoTy> t) {
 	return to_string(r);
 }
 
-extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d) {
+extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &d) {
 	// With different operations...
 	http_recv &r = d.rcv;
 
@@ -66,6 +88,7 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 	string &op2 = p.exts["operate"];
 
 	auto user_table = static_map<int_string, int_string>("$users.txt");
+	auto file_table = static_map<int_fperm_key_obj, int_string>("$files.txt");
 	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt");
 	auto ftoken_table = static_map<int_string, int_file_token_obj>("$files_tokens.txt");
 
@@ -76,7 +99,8 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 		if (op2 == "check") {
 			string &req = p.exts["request"];
 			string &pwd = p.exts["passwd"];
-			if (user_table.exist(req) && user_table.get(req).toString() == pwd) {
+			string mpwd = toMD5(pwd);
+			if (user_table.exist(req) && user_table.get(req).toString() == mpwd) {
 				int_string t = AutoAllocateToken(utoken_table);
 				utoken_table.append(t, req);
 				se.content = t.toString();
@@ -86,20 +110,10 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 				se.code_info = "Bad request";
 			}
 		}
-		else if (op2 == "register") {
+		else if (op2 == "create" || op2 == "register") {
 			string &pwd = p.exts["passwd"];
 			// 1. If you required,
-			if (p.exts.count("request")) {
-				string &req = p.exts["request"];
-				if (user_table.exist(req)) {
-					se.codeid = 400;
-					se.code_info = "Bad request";
-				}
-				else {
-					user_table.append(req, toMD5(pwd));
-				}
-			}
-			else if (p.exts.count("token")) {
+			if (p.exts.count("token")) {
 				int token = atoi(p.exts["token"].c_str());
 				if (utoken_table.exist(to_string(token))) {
 					int_string uname = utoken_table.get(to_string(token));
@@ -109,6 +123,15 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 					se.codeid = 400;
 					se.code_info = "Bad request";
 				}
+			} else if (p.exts.count("id")) {
+				string &req = p.exts["id"];
+				if (user_table.exist(req)) {
+					se.codeid = 400;
+					se.code_info = "Bad request";
+				}
+				else {
+					user_table.append(req, toMD5(pwd));
+				}
 			}
 			else {
 				// 2. If you not, auto alloc.
@@ -116,6 +139,12 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d
 				user_table.append(t, toMD5(pwd));
 				se.content = t.toString();
 			}
+		}
+		else if (op2 == "chown") {
+
+		}
+		else if (op2 == "chfperm") {
+
 		}
 	}
 	else if (op == "upload") {

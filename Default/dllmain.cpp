@@ -8,7 +8,7 @@ using namespace std;
 
 // Let's go on, write the easiest first
 
-extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata d) {
+extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &d) {
 	http_recv &r = d.rcv;
 	http_send sd;
 	//r.release();

@@ -33,6 +33,9 @@ public:
 	int_string(string o = "") : origin(o) {
 
 	}
+	~int_string() {
+
+	}
 private:
 	string origin;
 };
@@ -70,7 +73,7 @@ public:
 			fgets(buf2, bufsz, f);
 			if (at == sRemovingEOL(buf1)) {
 				TValue v;
-				v.fromStore(buf2);
+				v.fromStore(sRemovingEOL(buf2));
 				return v;
 			}
 		}
@@ -78,13 +81,20 @@ public:
 	}
 
 	bool exist(TKey key) {
-		try {
-			get(key);
-		}
-		catch (bad_key ex) {
+		FILE *f = fopen(fn.c_str(), "r");
+		string at = key.toStore();
+		if (f == NULL)
 			return false;
+		while (!feof(f)) {
+			fgets(buf1, bufsz, f);
+			fgets(buf2, bufsz, f);
+			if (at == sRemovingEOL(buf1)) {
+				fclose(f);
+				return true;
+			}
 		}
-		return true;
+		fclose(f);
+		return false;
 	}
 	
 	size_t count() {
