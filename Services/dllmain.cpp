@@ -121,7 +121,21 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	auto ftoken_table = static_map<int_string, int_file_token_obj>("$files_tokens.txt");
 
 	if (op == "file_operate") {
+		if (op2 == "open") {
 
+		}
+		else if (op2 == "read") {
+
+		}
+		else if (op2 == "write") {
+
+		}
+		else if (op2 == "eof") {
+
+		}
+		else if (op2 == "close") {
+
+		}
 	}
 	else if (op == "auth_workspace") {
 		if (op2 == "check") {

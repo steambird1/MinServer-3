@@ -1,5 +1,6 @@
 #include "ssocket.h"
 #include "file_object.h"
+#include "mutex_map.h"
 #include <iostream>
 using namespace std;
 
@@ -11,6 +12,9 @@ int bs = RCV_DEFAULT;
 
 typedef void(*libcall)(ssocket::acceptor&,dlldata&);
 map<string, libcall> clibs;
+map<string, string> libnames;
+
+mutex_map<string, void*> static_mem;
 
 string sRemovingEOL(string s) {
 	string t = s;
@@ -89,6 +93,8 @@ int main(int argc, char* argv[]) {
 				printf("Error: Bad config in configruation: %s\n", buf3);
 				eflag = true;
 			}
+			if (!static_mem.count(sp[1])) static_mem[sp[1]] = nullptr;
+//			static_mem.unlock(sp[1]);
 			HINSTANCE l = LoadLibrary(sp[1].c_str());
 			if (l == NULL) {
 				FreeLibrary(l);
@@ -98,6 +104,7 @@ int main(int argc, char* argv[]) {
 			else {
 				libcall addr = (libcall)GetProcAddress(l, "ServerMain");
 				clibs[sp[0]] = addr;
+				libnames[sp[0]] = sp[1];
 				aldr++;
 			}
 
@@ -141,13 +148,15 @@ int main(int argc, char* argv[]) {
 			goto sendup;
 		}
 		else {
-			dlldata d;
+			static_mem.lock(libnames[ph.first]);
+			auto d = dlldata(static_mem[libnames[ph.first]]);
 			d.forbidden = forbidden;
 			d.notfound = notfound;
 			d.currdir = move(sCurrDir());
 			d.rcv = http_recv(p);
 			clibs[ph.first](s, d);
 			d.rcv.release();
+			static_mem.unlock(libnames[ph.first]);
 			goto after_sent;
 		}
 

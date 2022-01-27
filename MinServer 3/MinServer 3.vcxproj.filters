@@ -28,6 +28,9 @@
     <Filter Include="头文件\utility">
       <UniqueIdentifier>{84237aff-98b2-4dbc-8a55-ecd3584cfe3f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\mutex_map">
+      <UniqueIdentifier>{c619beee-0630-410f-aac4-7dc6d37a919a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bytes.h">
@@ -44,6 +47,9 @@
     </ClInclude>
     <ClInclude Include="file_object.h">
       <Filter>头文件\file_object</Filter>
+    </ClInclude>
+    <ClInclude Include="mutex_map.h">
+      <Filter>头文件\mutex_map</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

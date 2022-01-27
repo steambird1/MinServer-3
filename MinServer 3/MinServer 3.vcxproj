@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClInclude Include="bytes.h" />
     <ClInclude Include="file_object.h" />
+    <ClInclude Include="mutex_map.h" />
     <ClInclude Include="ssocket.h" />
     <ClInclude Include="static_map.h" />
     <ClInclude Include="utility.h" />
