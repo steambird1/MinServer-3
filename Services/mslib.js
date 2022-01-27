@@ -10,6 +10,10 @@ function msexception(msg, errid) {
 
 const file_override = "w";
 const file_append = "a";
+const file_binary = "b";
+// e.g. readfile(filename)
+//      readfile(filename, file_binary)
+//      writefile(filename, file_override + file_binary, content)
 
 // Usage: var x = new msuser();
 function msuser(token, xhobject, f_operate, u_operate, d_operate, myuid) {
@@ -23,8 +27,12 @@ function msuser(token, xhobject, f_operate, u_operate, d_operate, myuid) {
 
     // Operations of content
 
-    this.readfile = function (filename) {
-        this.xhobject.open("GET", this.f_operate + "filename=" + filename + "&mode=r&token=" + this.token);
+    this.readfile = function (filename, mode) {
+        var wmode = mode;
+        if (mode == null || mode == undefined) {
+            wmode = "";
+        }
+        this.xhobject.open("GET", this.f_operate + "filename=" + filename + "&mode=r" + wmode + "&token=" + this.token);
         this.xhobject.send(null);
         if (this.xhobject.status != 200) {
             throw new msexception("Permission denied", 1);

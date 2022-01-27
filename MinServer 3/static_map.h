@@ -40,6 +40,35 @@ private:
 	string origin;
 };
 
+template <typename Ty>
+class int_vec : public int_static_map {
+public:
+	static_assert(is_base_of<int_static_map, Ty>::value, "Value-type should derive from int_static_map");
+	int_vec() {
+
+	}
+
+	vector<Ty> data;
+
+	virtual string toStore() {
+		string tmp = "";
+		for (auto &i : data)
+			tmp += (i.toStore() + "|");
+		if (tmp.length()) tmp.pop_back();
+		return tmp;
+	}
+	virtual void fromStore(string data) {
+		auto tmp = splitLines(data.c_str(), '|');
+		tmp.clear();
+		for (auto &i : tmp)
+		{
+			Ty t;
+			t.fromStore(i);
+			data.push_back(t);
+		}
+	}
+};
+
 #define default_bufsz 4096
 
 // This kind of object CAN'T BE SHARED DURING MULTITHREAD.

@@ -30,28 +30,38 @@ public:
 
 	string username;
 	string filename;
-	int perm;
+	bool ownerflag;
 
-	int_fperm_key_obj() {
+	int_fperm_key_obj() : ownerflag(false) {
 
 	}
 
 	virtual string toStore() {
-		return username + "|" + to_string(perm) + "|" + filename;
+		return username + "|" + filename + "|" + (ownerflag ? "1": "0");
 	}
 	virtual void fromStore(string data) {
 		auto p = splitLines(data.c_str(), '|');
 		if (p.size() < 3) {
 			username = "";
 			filename = "";
-			perm = 0;
+			ownerflag = false;
 		}
 		else {
 			username = p[0];
-			perm = atoi(p[1].c_str());
-			filename = p[2];
+			filename = p[1];
+			ownerflag = (p[2] == "1");
 		}
 	}
+
+	static int getPerm(string s) {
+		static map<char, int> table = { {'r',4},{'w',2},{'a',1} };
+		return s.length() ? table[s[0]] : 0;
+	}
+
+	static bool checkPerm(string s, int val) {
+		return val & getPerm(s) == getPerm(s);
+	}
+
 };
 
 constexpr int decline_alloc = 16384;
@@ -96,11 +106,79 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	// One of the advantages to use static_map is that you can update your system without clear users' login.
 	auto user_table = static_map<int_string, int_string>("$users.txt");
 	auto user_logged = static_map<int_string, int_string>("$users_logged.txt");	// Shows user-to-token 
-	auto file_table = static_map<int_fperm_key_obj, int_flag>("$files.txt");
+	auto file_table = static_map<int_fperm_key_obj, int_string>("$files.txt");
 	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt"); // Shows token-to-user
+	auto group_table = static_map<int_string, int_vec<int_string> >("$groups.txt");
 
 	if (op == "file_operate") {
 		// Open only as we used static_map
+		string &fn = p.exts["filename"];
+		string &mod = p.exts["mod"];
+		string &t = p.exts["token"];
+		file_object f = file_object(fn, mod);
+
+#pragma region Authority
+
+
+		bool flag = false;
+		int_fperm_key_obj query;
+
+		string u;
+		if (!p.exts.count("token") || !utoken_table.exist(t)) u = "0";
+		else u = utoken_table.get(t);
+
+		query.filename = fn;
+
+		// 1. Single-user authority
+		query.username = u;
+		if (file_table.exist(query)) {
+			int r = atoi(file_table.get(query).toString().c_str());
+			if (int_fperm_key_obj::checkPerm(mod, r)) {
+				flag = true;
+			}
+		}
+
+		// 2. Group-based authority
+		auto grs = group_table.exist(u) ? group_table.get(u) : int_vec<int_string>();
+		for (auto &i : grs.data) {
+			query.username = i;
+			if (file_table.exist(query)) {
+				int r = atoi(file_table.get(query).toString().c_str());
+				if (int_fperm_key_obj::checkPerm(mod, r)) {
+					flag = true;
+				}
+			}
+		}
+
+		// 3. Authority failure
+		if (!flag) {
+			se.codeid = 403;
+			se.code_info = "Forbidden";
+			goto sendup;
+		}
+
+#pragma endregion
+
+		if (mod.length()) {
+			switch (mod[0]) {
+			case 'r':
+				se.loadContent(f);
+				f.close();
+				break;
+			case 'w': case 'a':
+				fprintf(f, "%s", se.content.toCharArray());
+				f.close();
+				break;
+			default:
+				se.codeid = 400;
+				se.code_info = "Bad request";
+				break;
+			}
+		}
+		else {
+			se.codeid = 400;
+			se.code_info = "Bad request";
+		}
 	}
 	else if (op == "auth_workspace") {
 		if (op2 == "check") {
@@ -158,14 +236,18 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 
 			if (utoken_table.exist(token)) {
 				int_fperm_key_obj f;
-				f.perm = -1;	// -1 for ownership
 				f.username = utoken_table.get(token);
 				f.filename = fname;
+				f.ownerflag = true;
 				if (file_table.exist(f)) {
 					file_table.erase(f);
 					f.username = touid;
 					// Here can only be ONE ownership
-					file_table.append(f, int_flag());
+					// Also, the value set is not necessary
+
+					// Also, ownership can only be a person,
+					// not a group.
+					file_table.append(f, to_string(-1));
 				}
 				else {
 					se.codeid = 400;
@@ -185,15 +267,14 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 
 			if (utoken_table.exist(token)) {
 				int_fperm_key_obj f;
-				f.perm = -1;
 				f.username = utoken_table.get(token);
 				f.filename = fname;
+				f.ownerflag = true;
 				if (file_table.exist(f)) {
 					int_fperm_key_obj g;
-					g.perm = atoi(toperm.c_str());
 					g.username = touid;
 					g.filename = fname;
-					file_table.set(g, int_flag());
+					file_table.set(g, toperm);
 				}
 				else {
 					se.codeid = 400;
@@ -206,15 +287,12 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 			}
 		}
 	}
-	else if (op == "upload") {
-
-	}
 	else {
 		se.codeid = 400;
 		se.code_info = "Bad Request";
 	}
 	// We don't support DLL execution now. It's not necessary.
-
+sendup:;
 	s.sends(se);
 	se.release();
 	r.release();	// It's just a copy
