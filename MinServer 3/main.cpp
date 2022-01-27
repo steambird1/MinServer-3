@@ -1,4 +1,5 @@
 #include "ssocket.h"
+#include "file_object.h"
 #include <iostream>
 using namespace std;
 
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
 	int aldr = 0;
 
 	printf("Loading...\n");
-	FILE *f = fopen(libs.c_str(), "r");
+	FILE *f = fopen(libs.c_str(), "r");	// Doesn't need file_object
 	if (f != NULL) {
 		while (!feof(f)) {
 			USES_BEGIN(buf3)
@@ -102,12 +103,13 @@ int main(int argc, char* argv[]) {
 
 			USES_END(buf3)
 		}
-		fclose(f);
+		fclose(f);	// Doesn't need
 	}
 	if (eflag) system("pause");
 
 	system("cls");
 	printf("* Server running *\n%d Assiocation(s) loaded\n", aldr);
+	// -- Multitheading component begin --
 	s.accepts([&](ssocket::acceptor &s) {
 		http_recv p;
 		http_send se;
@@ -121,21 +123,21 @@ int main(int argc, char* argv[]) {
 		auto ph = resolveMinorPath(p.path);
 
 		if (ph.first.find("$") != string::npos) {
-			FILE *f = fopen(forbidden.c_str(), "rb");
+			auto f = file_object(forbidden, "rb");
 			se.codeid = 403;
 			se.code_info = "Forbidden";
 			se.loadContent(f);
-			fclose(f);
+			f.close();
 			goto sendup;
 		}
 
 		// Find for
 		if (!clibs.count(ph.first)) {
-			FILE *f = fopen(notfound.c_str(), "rb");
+			auto f = file_object(notfound, "rb");
 			se.loadContent(f);
 			se.codeid = 404;
 			se.code_info = "Not Found";
-			fclose(f);
+			f.close();
 			goto sendup;
 		}
 		else {

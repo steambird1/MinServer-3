@@ -1,6 +1,8 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#include "file_object.h"
+#include "bytes.h"
 using namespace std;
 
 // Most of these utilities are from MinServer 2.
@@ -62,23 +64,23 @@ string makeTemp(void) {
 }
 
 int getSize(string filename) {
-	FILE *f = fopen(filename.c_str(), "r");
+	file_object f = file_object(filename, "r");
 	if (f == NULL) return 0;
 	fseek(f, 0, SEEK_END);
 	int res = ftell(f);
-	fclose(f);
+	f.close();
 	return res;
 }
 
 bytes readAll(string cwtemp) {
 	int cws = getSize(cwtemp);
-	FILE *rs = fopen(cwtemp.c_str(), "rb"); // not 'r'
+	file_object rs = file_object(cwtemp, "rb");
 	fseek(rs, 0, SEEK_SET); // to head
 	char *sending = new char[cws + 10];
 	memset(sending, 0, sizeof(sending));
 	fread(sending, sizeof(char), cws, rs);
 	sending[cws] = '\0';
-	fclose(rs);
+	rs.close();
 	bytes b;
 	b.add(sending, cws);
 	return move(b);

@@ -7,10 +7,16 @@ file_object::file_object(string filename, string operate)
 {
 	this->my_fn = filename;
 	this->my_op = operate;
-	fm_map.emplace(filename,mutex());
+	//fm_map.emplace(make_pair(filename, mutex()));
+	this->obj = fopen(filename.c_str(), operate.c_str());
+	if (!fm_map.count(filename)) fm_map[filename];
 	while (true) {
 		try {
 			fm_map[filename].lock();
+			if (this->obj == nullptr) {
+				this->closed = true;
+				close();
+			}
 			return;
 		}
 		catch (system_error ex) {
@@ -31,7 +37,7 @@ string file_object::get_filename()
 
 void file_object::close()
 {
-	fclose(obj);
+	if (!this->closed) fclose(obj);
 	this->closed = true;
 	fm_map[this->my_fn].unlock();
 	fm_map.erase(this->my_fn);

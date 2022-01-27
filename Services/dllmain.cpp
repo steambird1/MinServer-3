@@ -4,6 +4,8 @@
 #include "../MinServer 3/bytes.cpp"
 #include "../MinServer 3/utility.h"
 #include "../MinServer 3/static_map.h"
+#include "../MinServer 3/file_object.h"
+#include "../MinServer 3/file_object.cpp"
 #include "md5_3.h"
 #include <cstdio>
 using namespace std;

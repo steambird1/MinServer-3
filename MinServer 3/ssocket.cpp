@@ -414,11 +414,6 @@ void ssocket::acceptor::receive(http_recv & h)
 			this->prev_recv.add(this->recv_buf, r);
 		}
 	}
-	// As for non-external document promises full
-	/*
-	FILE *f = fopen("promise.gif", "wb");
-	fwrite(h.content.toCharArray(), sizeof(char), h.content.length(), f);
-	fclose(f);*/
 	b.release();
 }
 

@@ -3,6 +3,8 @@
 // File object with mutex
 // To make sure multithreading
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <cstdio>
 #include <string>
 #include <mutex>

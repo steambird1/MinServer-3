@@ -3,6 +3,8 @@
 #include "../MinServer 3/bytes.h"
 #include "../MinServer 3/bytes.cpp"
 #include "../MinServer 3/utility.h"
+#include "../MinServer 3/file_object.h"
+#include "../MinServer 3/file_object.cpp"
 #include <cstdio>
 using namespace std;
 
@@ -24,13 +26,13 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	if (fpath.length() && (fpath[0] == '/' || fpath[0] == '\\')) fpath.erase(fpath.begin());
 
 	string rpath = (d.currdir + fpath.c_str());
-	FILE *f = fopen(rpath.c_str(), "rb");
+	auto f = file_object(rpath, "rb");
 	if (f == NULL) {
-		FILE *g = fopen(d.notfound.c_str(), "rb");
+		auto g = file_object(d.notfound, "rb");
 		sd.loadContent(g);
 		sd.codeid = 404;
 		sd.code_info = "Not Found";
-		fclose(g);
+		g.close();
 	}
 	else {
 		string ge = getExt(fpath);
@@ -41,9 +43,9 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 			bool label_f = false, inserted = false;
 			const char* msp = readAll("mspara3.js").toCharArray();
 			int sl = strlen(msp);
-			FILE *g = fopen(t.c_str(), "w");
-			fclose(f);
-			f = fopen(rpath.c_str(), "r");
+			auto g = file_object(d.notfound, "rb");
+			f.close();
+			f = file_object(rpath, "rb");
 			while (!feof(f)) {
 				char c = fgetc(f);
 				if (feof(f)) break;//...
@@ -97,15 +99,16 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 					fputc(c, g);
 				//}
 			}
-			fclose(f);
-			fclose(g);
-			g = fopen(t.c_str(), "rb");
+			f.close();
+			g.close();
+			//g = fopen(t.c_str(), "rb");
+			g = file_object(t, "rb");
 			sd.loadContent(g);
-			fclose(g);
+			g.close();
 		}
 		else {
 			sd.loadContent(f);
-			fclose(f);
+			f.close();
 		}
 	}
 

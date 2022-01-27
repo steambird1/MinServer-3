@@ -63,7 +63,7 @@ public:
 	}
 
 	TValue get(TKey key) {
-		FILE *f = fopen(fn.c_str(), "r");
+		auto f = file_object(fn, "r");
 		string at = key.toStore();
 		if (f == NULL)
 			throw bad_key();
@@ -77,11 +77,11 @@ public:
 				return v;
 			}
 		}
-		fclose(f);
+		f.close();
 	}
 
 	bool exist(TKey key) {
-		FILE *f = fopen(fn.c_str(), "r");
+		auto f = file_object(fn, "r");
 		string at = key.toStore();
 		if (f == NULL)
 			return false;
@@ -89,16 +89,16 @@ public:
 			fgets(buf1, bufsz, f);
 			fgets(buf2, bufsz, f);
 			if (at == sRemovingEOL(buf1)) {
-				fclose(f);
+				f.close();
 				return true;
 			}
 		}
-		fclose(f);
+		f.close();
 		return false;
 	}
 	
 	size_t count() {
-		FILE *f = fopen(fn.c_str(), "r");
+		auto f = file_object(fn, "r");
 		if (f == NULL)
 			return 0;
 		size_t t = 0;
@@ -107,22 +107,23 @@ public:
 			fgets(buf2, bufsz, f);
 			t++;
 		}
-		fclose(f);
+		f.close();
 		return t;
 	}
 
 	void append(TKey key, TValue value) {
-		FILE *f = fopen(fn.c_str(), "a");
+		auto f = file_object(fn, "a");
 		fprintf(f,"%s\n%s\n", key.toStore().c_str(), value.toStore().c_str());
-		fclose(f);
+		f.close();
 	}
 
 	void set(TKey key, TValue value) {
 		string s = makeTemp();
-		FILE *f = fopen(fn.c_str(), "r"), *g = fopen(s.c_str(), "w");
+		auto f = file_object(fn, "r"), g = file_object(s, "w");
 		if (f == NULL)
 		{
 			append(key, value);
+			g.close();
 			return;
 		}
 		bool flag = false;
@@ -138,8 +139,8 @@ public:
 				fprintf(g, "%s\n", buf2);
 			}
 		}
-		fclose(f);
-		fclose(g);
+		f.close();
+		g.close();
 		CopyFileA(s.c_str(), fn.c_str(), FALSE);
 		if (!flag)
 			append(key, value);
@@ -147,9 +148,12 @@ public:
 
 	void erase(TKey key) {
 		string s = makeTemp();
-		FILE *f = fopen(fn.c_str(), "r"), *g = fopen(s.c_str(), "w");
+		auto f = file_object(fn, "r"), g = file_object(s, "w");
 		if (f == NULL)
+		{
+			g.close();
 			throw bad_key();
+		}
 		bool flag = false;
 		while (!feof(f)) {
 			fgets(buf1, bufsz, f);
@@ -161,8 +165,11 @@ public:
 				flag = true;
 			}
 		}
+		f.close();
+		g.close();
 		if (!flag)
 			throw bad_key();
+		CopyFileA(s.c_str(), fn.c_str(), FALSE);
 	}
 
 private:
