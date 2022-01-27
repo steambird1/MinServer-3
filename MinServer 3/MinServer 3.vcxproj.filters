@@ -19,6 +19,15 @@
     <Filter Include="头文件\ssocket3">
       <UniqueIdentifier>{99f8a6dc-890e-4a33-8c10-edaa6d0f2dfd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\file_object">
+      <UniqueIdentifier>{c08fbca9-5960-436a-9c04-2db1124e885e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\static_map">
+      <UniqueIdentifier>{2d34a37f-1ae7-45d1-b93b-c36b3ce16581}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\utility">
+      <UniqueIdentifier>{84237aff-98b2-4dbc-8a55-ecd3584cfe3f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bytes.h">
@@ -28,10 +37,13 @@
       <Filter>头文件\ssocket3</Filter>
     </ClInclude>
     <ClInclude Include="utility.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\utility</Filter>
     </ClInclude>
     <ClInclude Include="static_map.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\static_map</Filter>
+    </ClInclude>
+    <ClInclude Include="file_object.h">
+      <Filter>头文件\file_object</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -43,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="ssocket.cpp">
       <Filter>头文件\ssocket3</Filter>
+    </ClCompile>
+    <ClCompile Include="file_object.cpp">
+      <Filter>头文件\file_object</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

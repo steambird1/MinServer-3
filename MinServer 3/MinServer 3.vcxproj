@@ -124,12 +124,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="bytes.h" />
+    <ClInclude Include="file_object.h" />
     <ClInclude Include="ssocket.h" />
     <ClInclude Include="static_map.h" />
     <ClInclude Include="utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bytes.cpp" />
+    <ClCompile Include="file_object.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ssocket.cpp" />
   </ItemGroup>
