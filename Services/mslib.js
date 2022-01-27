@@ -8,55 +8,8 @@ function msexception(msg, errid) {
     this.message = msg;
 }
 
-// Usage: var x = new msfile();
-
-function msfile(token, xhobject, f_operate) {
-    this.token = token;
-    this.xhobject = xhobject;
-    this.f_operate = f_operate;
-
-    // Operations
-
-    // Read a line (to '\n')
-    this.read = function () {
-        this.xhobject.open("GET", this.f_operate + "operate=read&token=" + this.token, false);
-        this.xhobject.send(null);
-        if (this.xhobject.status != 200) {
-            throw new msexception("Bad request", 3);
-        } else {
-            return this.xhobject.responseText;
-        }
-    };
-
-    // Write a line
-    this.write = function (line) {
-        this.xhobject.open("POST", this.f_operate + "operate=write&token=" + this.token, false);
-        this.xhobject.send(line);
-        if (this.xhobject.status != 200) {
-            throw new msexception("Bad request", 3);
-        }
-    };
-
-    // Is end-of-file
-    this.eof = function () {
-        this.xhobject.open("GET", this.f_operate + "operate=eof&token=" + this.token, false);
-        this.xhobject.send(null);
-        if (this.xhobject.status != 200) {
-            throw new msexception("Bad request", 3);
-        } else {
-            return this.xhobject.responseText;
-        }
-    }
-
-    // Close token
-    this.close = function () {
-        this.xhobject.open("GET", this.f_operate + "operate=close&token=" + this.token, false);
-        this.xhobject.send(null);
-        this.token = null;
-        this.f_operate = null;
-    };
-
-}
+const file_override = "w";
+const file_append = "a";
 
 // Usage: var x = new msuser();
 function msuser(token, xhobject, f_operate, u_operate, d_operate, myuid) {
@@ -68,16 +21,27 @@ function msuser(token, xhobject, f_operate, u_operate, d_operate, myuid) {
     this.d_operate = d_operate;
     this.myuid = myuid;
 
-    // Operations
-    this.openfile = function (filename, operate) {
-        this.xhobject.open("GET", this.f_operate + "operate=open&name=" + filename + "&utoken=" + this.token + "&type=" + operate, false);
+    // Operations of content
+
+    this.readfile = function (filename) {
+        this.xhobject.open("GET", this.f_operate + "filename=" + filename + "&mode=r&token=" + this.token);
         this.xhobject.send(null);
         if (this.xhobject.status != 200) {
             throw new msexception("Permission denied", 1);
         } else {
-            return new msfile(this.xhobject.responseText, this.xhobject, this.f_operate);
+            return this.xhobject.responseText;
         }
     }
+
+    this.writefile = function (filename, mode, content) {
+        this.xhobject.open("POST", this.f_operate + "filename=" + filename + "&mode=" + mode + "&token=" + this.token);
+        this.xhobject.send(content);
+        if (this.xhobject.status != 200) {
+            throw new msexception("Permission denied", 1);
+        }
+    }
+
+    // Operations of ownership
 
     this.chown = function (filename, chto) {
         this.xhobject.open("GET", this.u_operate + "operate=chown&file=" + filename + "&token=" + this.token + "&touid=" + chto, false);

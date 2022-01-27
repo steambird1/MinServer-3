@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 		}
 		else {
 			static_mem.lock(libnames[ph.first]);
-			auto d = dlldata(static_mem[libnames[ph.first]]);
+			dlldata d;
 			d.forbidden = forbidden;
 			d.notfound = notfound;
 			d.currdir = move(sCurrDir());

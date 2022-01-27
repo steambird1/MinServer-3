@@ -10,33 +10,6 @@
 #include <cstdio>
 using namespace std;
 
-// struct-like thing
-class int_file_token_obj : public int_static_map {
-public:
-
-	string filename;
-	int perm;
-
-	int_file_token_obj() {
-
-	}
-
-	virtual string toStore() {
-		return filename + "|" + to_string(perm);
-	}
-	virtual void fromStore(string data) {
-		auto p = splitLines(data.c_str(), '|');
-		if (p.size() < 2) {
-			filename = "";
-			perm = 0;
-		}
-		else {
-			filename = p[0];
-			perm = atoi(p[1].c_str());
-		}
-	}
-};
-
 class int_flag : public int_static_map {
 
 public:
@@ -102,8 +75,13 @@ int_string AutoAllocateToken(static_map<int_string, AutoTy> t) {
 	return to_string(r);
 }
 
+struct my_data {
+	map<int, file_object> fo;
+};
+
 extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &d) {
 	// With different operations...
+
 	http_recv &r = d.rcv;
 
 	http_send se;
@@ -115,27 +93,14 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	string &op = p.exts["method"];
 	string &op2 = p.exts["operate"];
 
+	// One of the advantages to use static_map is that you can update your system without clear users' login.
 	auto user_table = static_map<int_string, int_string>("$users.txt");
+	auto user_logged = static_map<int_string, int_string>("$users_logged.txt");	// Shows user-to-token 
 	auto file_table = static_map<int_fperm_key_obj, int_flag>("$files.txt");
-	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt");
-	auto ftoken_table = static_map<int_string, int_file_token_obj>("$files_tokens.txt");
+	auto utoken_table = static_map<int_string, int_string>("$users_tokens.txt"); // Shows token-to-user
 
 	if (op == "file_operate") {
-		if (op2 == "open") {
-
-		}
-		else if (op2 == "read") {
-
-		}
-		else if (op2 == "write") {
-
-		}
-		else if (op2 == "eof") {
-
-		}
-		else if (op2 == "close") {
-
-		}
+		// Open only as we used static_map
 	}
 	else if (op == "auth_workspace") {
 		if (op2 == "check") {
@@ -143,8 +108,12 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 			string &pwd = p.exts["passwd"];
 			string mpwd = toMD5(pwd);
 			if (user_table.exist(req) && user_table.get(req).toString() == mpwd) {
+				if (user_logged.exist(req)) {
+					utoken_table.erase(user_logged.get(req));
+				}
 				int_string t = AutoAllocateToken(utoken_table);
 				utoken_table.append(t, req);
+				user_logged.set(req, t);
 				se.content = t.toString();
 			}
 			else {

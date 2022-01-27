@@ -162,13 +162,7 @@ using namespace std;
 	// Used for sharing to DLL
 	// Somebody says that it's important not to copy
 	struct dlldata {
-
-		dlldata(void *st) : static_mem(st) {
-
-		}
-
 		http_recv rcv;
 		string forbidden, notfound, currdir;
-		void *&static_mem;
 	};
 //}
