@@ -30,8 +30,15 @@ public:
 	operator string&() {
 		return this->origin;
 	}
-	int_string(string o = "") : origin(o) {
+	int_string(string o) : origin(o) {
 
+	}
+	// By requirement of const_cast ??
+	int_string() {
+		this->origin = "";
+	}
+	int_string(const int_string &other) {
+		this->origin = other.origin;
 	}
 	~int_string() {
 
@@ -44,6 +51,7 @@ template <typename Ty>
 class int_vec : public int_static_map {
 public:
 	static_assert(is_base_of<int_static_map, Ty>::value, "Value-type should derive from int_static_map");
+	
 	int_vec() {
 
 	}
@@ -59,12 +67,12 @@ public:
 	}
 	virtual void fromStore(string data) {
 		auto tmp = splitLines(data.c_str(), '|');
-		tmp.clear();
+		this->data.clear();
 		for (auto &i : tmp)
 		{
 			Ty t;
 			t.fromStore(i);
-			data.push_back(t);
+			this->data.push_back((const Ty)(t));	// I love C++
 		}
 	}
 };
@@ -103,10 +111,12 @@ public:
 			if (at == sRemovingEOL(buf1)) {
 				TValue v;
 				v.fromStore(sRemovingEOL(buf2));
+				f.close();
 				return v;
 			}
 		}
 		f.close();
+		throw bad_key();
 	}
 
 	bool exist(TKey key) {
@@ -157,15 +167,17 @@ public:
 		}
 		bool flag = false;
 		while (!feof(f)) {
+			memset(buf1, 0, bufsz * sizeof(char));
+			memset(buf2, 0, bufsz * sizeof(char));
 			fgets(buf1, bufsz, f);
 			fgets(buf2, bufsz, f);
-			fprintf(g, "%s\n", buf1);
+			fprintf(g, "%s\n", sRemovingEOL(buf1).c_str());
 			if (key.toStore() == sRemovingEOL(buf1)) {
 				fprintf(g, "%s\n", value.toStore().c_str());
 				flag = true;
 			}
 			else {
-				fprintf(g, "%s\n", buf2);
+				fprintf(g, "%s\n", sRemovingEOL(buf2).c_str());
 			}
 		}
 		f.close();
@@ -188,7 +200,7 @@ public:
 			fgets(buf1, bufsz, f);
 			fgets(buf2, bufsz, f);
 			if (key.toStore() != sRemovingEOL(buf1)) {
-				fprintf(g, "%s\n%s\n", buf1, buf2);
+				fprintf(g, "%s\n%s\n", sRemovingEOL(buf1).c_str(), sRemovingEOL(buf2).c_str());
 			}
 			else {
 				flag = true;

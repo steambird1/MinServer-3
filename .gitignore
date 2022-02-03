@@ -264,3 +264,7 @@ __pycache__/
 /MinServer 3/mspara3.js
 /MinServer 3/$users.txt
 /MinServer 3/$users_tokens.txt
+/MinServer 3/$files.txt
+/MinServer 3/x.txt
+/MinServer 3/$groups.txt
+/MinServer 3/$users_logged.txt

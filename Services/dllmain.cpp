@@ -59,7 +59,7 @@ public:
 	}
 
 	static bool checkPerm(string s, int val) {
-		return val & getPerm(s) == getPerm(s);
+		return (val & getPerm(s)) == getPerm(s);
 	}
 
 };
@@ -115,7 +115,12 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 		string &fn = p.exts["filename"];
 		string &mod = p.exts["mod"];
 		string &t = p.exts["token"];
-		file_object f = file_object(fn, mod);
+		if (fn == "" || mod == "") {
+			// Bad things
+			se.codeid = 400;
+			se.code_info = "Bad request";
+			goto sendup;
+		}
 
 #pragma region Authority
 
@@ -158,6 +163,7 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 		}
 
 #pragma endregion
+		file_object f = file_object(fn, mod);
 
 		if (mod.length()) {
 			switch (mod[0]) {
@@ -166,7 +172,14 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 				f.close();
 				break;
 			case 'w': case 'a':
-				fprintf(f, "%s", se.content.toCharArray());
+				if (mod.length() == 2 && mod[1] == 'b') {
+					// Binary mode
+					auto ptr = se.content.toCharArray();
+					fwrite(ptr, sizeof(char), se.content.length(), f);
+				}
+				else {
+					fprintf(f, "%s", se.content.toCharArray());
+				}
 				f.close();
 				break;
 			default:
