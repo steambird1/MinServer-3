@@ -11,8 +11,8 @@ int port = 80;
 int bs = RCV_DEFAULT;
 
 typedef void(*libcall)(ssocket::acceptor&,dlldata&);
-map<string, libcall> clibs;
-map<string, string> libnames;
+mutex_map<string, libcall> clibs;
+mutex_map<string, string> libnames;
 
 mutex_map<string, void*> static_mem;
 
@@ -148,6 +148,8 @@ int main(int argc, char* argv[]) {
 			goto sendup;
 		}
 		else {
+			clibs.lock(ph.first);
+			libnames.lock(ph.first);
 			static_mem.lock(libnames[ph.first]);
 			dlldata d;
 			d.forbidden = forbidden;
@@ -157,6 +159,8 @@ int main(int argc, char* argv[]) {
 			clibs[ph.first](s, d);
 			d.rcv.release();
 			static_mem.unlock(libnames[ph.first]);
+			clibs.unlock(ph.first);
+			libnames.unlock(ph.first);
 			goto after_sent;
 		}
 

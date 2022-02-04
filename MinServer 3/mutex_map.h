@@ -43,7 +43,7 @@ public:
 	}
 
 	bool count(TKey val) {
-		return m_map.count(val);
+		return v_map.count(val);
 	}
 
 	void erase(TKey val) {

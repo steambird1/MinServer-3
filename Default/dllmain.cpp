@@ -20,7 +20,7 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 
 	sd.codeid = 200;
 	sd.code_info = "OK";
-	sd.proto_ver = r.proto_ver;
+	sd.proto_ver = string(r.proto_ver);
 	sd.attr["Content-Type"] = "text/html";
 
 	if (fpath.length() && (fpath[0] == '/' || fpath[0] == '\\')) fpath.erase(fpath.begin());
@@ -43,9 +43,9 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 			bool label_f = false, inserted = false;
 			const char* msp = readAll("mspara3.js").toCharArray();
 			int sl = strlen(msp);
-			auto g = file_object(d.notfound, "rb");
+			auto g = file_object(t, "w");
 			f.close();
-			f = file_object(rpath, "rb");
+			f = file_object(rpath, "r");
 			while (!feof(f)) {
 				char c = fgetc(f);
 				if (feof(f)) break;//...

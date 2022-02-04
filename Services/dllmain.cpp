@@ -95,7 +95,7 @@ extern "C" __declspec(dllexport) void ServerMain(ssocket::acceptor &s, dlldata &
 	http_recv &r = d.rcv;
 
 	http_send se;
-	se.proto_ver = r.proto_ver;
+	se.proto_ver = string(r.proto_ver);
 	se.codeid = 200;
 	se.code_info = "OK";
 
